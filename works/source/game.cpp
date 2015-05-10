@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <cerrno>
@@ -8,6 +9,9 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <sstream>
+#include "game.h"
+#include "player.h"
 #define MAXDATASIZE 1000
 #define pname lengly
 
@@ -19,20 +23,22 @@ int main(int argc, char *argv[]) {
 	char buf[MAXDATASIZE];
 	struct hostent *host;
 	struct sockaddr_in serv_addr;
+	stringstream ss;
+	string s;
 
 	if (argc < 6) {
 		printf("Input format error\n");
 		return 0;
 	}
-	// get host ip
+	// 解析服务器ip
 	if ((host = gethostbyname(argv[1])) == NULL) {
 		herror("gethostbyname error!");
 		return 0;
 	}
-	// get post & pid
+	// 解析端口和pid
 	port = atoi(argv[4]);
 	pid = atoi(argv[5]);
-	// socket
+	// 建立socket连接
 	if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket error");
 		return 0;
@@ -54,17 +60,24 @@ int main(int argc, char *argv[]) {
 		close(sock_fd);
 		return 0;
 	}
+	// 开始比赛
+	while (true) {
+		if((recvbytes=recv(sock_fd, buf, MAXDATASIZE, MSG_WAITALL)) == -1) {  
+			perror("recv出错！");  
+			continue;
+		} 
+		if (recvbytes == 0) continue;
+		// 开始解析
+		ss.clear();
+		ss.str(string(buf,recvbytes));
+		ss >> s;
+		if (s == "seat/") {
 
-/*
+		}
+
+	}
 
 
-	if((recvbytes=recv(sock_fd, buf, MAXDATASIZE, 0)) == -1) {  
-		perror("recv出错！");  
-		exit(1);  
-	}  
-	buf[recvbytes] = '\0';  
-	printf("Received: %s",buf);  
-   */
 	close(sock_fd);  
 	return 0;
 }

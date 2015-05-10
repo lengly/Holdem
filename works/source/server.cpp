@@ -8,7 +8,7 @@
 #include <sys/wait.h> 
 #include <arpa/inet.h>
 #include <unistd.h>
-#define SERVPORT 3333	/*服务器监听端口号 */  
+#define SERVPORT 10009	/*服务器监听端口号 */  
 #define BACKLOG 10	/* 最大同时连接请求数 */  
 #define MAXDATASIZE 1000
 
@@ -50,13 +50,13 @@ int main()
 		buf[recvbytes] = '\0';  
 		printf("Received: %s",buf); 
 		printf("received a connection from %s\n", inet_ntoa(remote_addr.sin_addr));  
-		if(!fork()) {	/* 子进程代码段 */  
+		// if(!fork()) {	/* 子进程代码段 */  
 			if(send(client_fd, "Hello, you are connected!\n", 26, 0) == -1) {  
 				perror("send出错！");  
 			}  
 			close(client_fd);  
 			exit(0);	
-		}  
+		// }  
 		close(client_fd);  
 	}  
 	return 0;
