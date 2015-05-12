@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in serv_addr;
 	stringstream ss;
 	string s;
+	Player player;
 
 	if (argc < 6) {
 		printf("Input format error\n");
@@ -72,7 +73,24 @@ int main(int argc, char *argv[]) {
 		ss.str(string(buf,recvbytes));
 		ss >> s;
 		if (s == "seat/") {
+			// TODO maxInitialMoney
+			player.startRound();
 
+		} else if (s == "game-over") {
+			break;
+		} else if (s == "blind/") {
+			ss >> s;
+			if (s == "/blind") continue;
+			if (pid == atoi(s.c_str())) {
+				ss >> s;
+				player.bet(atoi(s.c_str()));
+			}
+		} else if (s == "hold/") {
+			string s_color,s_point;
+			ss >> s_color >> s_point;
+			player.addHold(Card(s_color, s_point));
+			ss >> s_color >> s_point;
+			player.addHold(Card(s_color, s_point));
 		}
 
 	}
