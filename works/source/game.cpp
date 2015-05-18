@@ -13,11 +13,11 @@
 #include "game.h"
 #include "player.h"
 #define MAXDATASIZE 1000
-#define pname lengly
 
 using namespace std;
 
 int main(int argc, char *argv[]) {
+	//freopen("output","w",stdout);
 	int sock_fd, recvbytes, sendbytes, port, pid, len;
 	string pname = "lengly";
 	char buf[MAXDATASIZE];
@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
 	stringstream ss;
 	string s;
 	Player player;
+	string s_color,s_point;
 
 	if (argc < 6) {
 		printf("Input format error\n");
@@ -37,7 +38,7 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 	// 解析端口和pid
-	port = atoi(argv[4]);
+	port = atoi(argv[2]);
 	pid = atoi(argv[5]);
 	// 建立socket连接
 	if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -79,18 +80,42 @@ int main(int argc, char *argv[]) {
 		} else if (s == "game-over") {
 			break;
 		} else if (s == "blind/") {
-			ss >> s;
-			if (s == "/blind") continue;
-			if (pid == atoi(s.c_str())) {
-				ss >> s;
-				player.bet(atoi(s.c_str()));
+			while (ss >> s, s != "/blind") {
+				if (pid == atoi(s.c_str())) {
+					ss >> s;
+					player.bet(atoi(s.c_str()));
+				}
 			}
 		} else if (s == "hold/") {
-			string s_color,s_point;
+			for(int i=0;i<2;i++) {
+				ss >> s_color >> s_point;
+				player.addHold(Card(s_color, s_point));
+			}
+		} else if (s == "inquire/") {
+			// TODO response
+			sprintf(buf, "call");
+			len = strlen(buf);
+			if ((sendbytes = send(sock_fd, buf, len, 0)) != len) {
+				perror("send error");
+				close(sock_fd);
+				return 0;
+			}
+		} else if (s == "flop/") {
+			for(int i=0;i<3;i++) {
+				ss >> s_color >> s_point;
+				player.addCard(Card(s_color, s_point));
+			}
+
+		} else if (s == "turn/") {
 			ss >> s_color >> s_point;
-			player.addHold(Card(s_color, s_point));
+			player.addCard(Card(s_color, s_point));
+		} else if (s == "river/") {
 			ss >> s_color >> s_point;
-			player.addHold(Card(s_color, s_point));
+			player.addCard(Card(s_color, s_point));
+		} else if (s == "showdown/") {
+
+		} else if (s == "pot-win/") {
+
 		}
 
 	}
