@@ -8,7 +8,7 @@
 #include <sys/wait.h> 
 #include <arpa/inet.h>
 #include <unistd.h>
-#define SERVPORT 10009	/*服务器监听端口号 */  
+#define SERVPORT 6000	/*服务器监听端口号 */  
 #define BACKLOG 10	/* 最大同时连接请求数 */  
 #define MAXDATASIZE 1000
 

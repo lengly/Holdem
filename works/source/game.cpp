@@ -9,6 +9,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <sstream>
 #include "game.h"
 #include "player.h"
@@ -16,55 +17,79 @@
 
 using namespace std;
 
+int m_socket_id = -1;
+
 int main(int argc, char *argv[]) {
-	//freopen("output","w",stdout);
-	int sock_fd, recvbytes, sendbytes, port, pid, len;
+	int recvbytes, sendbytes, len;
 	string pname = "lengly";
 	char buf[MAXDATASIZE];
-	struct hostent *host;
-	struct sockaddr_in serv_addr;
 	stringstream ss;
 	string s;
 	Player player;
 	string s_color,s_point;
 
-	if (argc < 6) {
+	if (argc != 6) {
 		printf("Input format error\n");
 		return 0;
 	}
-	// 解析服务器ip
-	if ((host = gethostbyname(argv[1])) == NULL) {
-		herror("gethostbyname error!");
-		return 0;
-	}
-	// 解析端口和pid
-	port = atoi(argv[2]);
-	pid = atoi(argv[5]);
+	// 提取命令行參數
+	in_addr_t server_ip = inet_addr(argv[1]);
+	in_port_t server_port = atoi(argv[2]);
+	in_addr_t my_ip = inet_addr(argv[3]);
+	in_port_t my_port = atoi(argv[4]);
+	int my_id = atoi(argv[5]);
+	string my_name = "lengly";
+
 	// 建立socket连接
-	if ((sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if ((m_socket_id = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket error");
 		return 0;
 	}
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(port);
-	serv_addr.sin_addr = *((struct in_addr *) host->h_addr);
-	bzero(&(serv_addr.sin_zero), 8);
-	if (connect(sock_fd, (struct sockaddr *)&serv_addr, sizeof(struct sockaddr)) == -1) { 
-		perror("connect error");
-		close(sock_fd);
+
+	// 綁定自己的ip
+	struct sockaddr_in my_addr;
+	my_addr.sin_addr.s_addr = my_ip;
+	my_addr.sin_family = AF_INET;
+	my_addr.sin_port = htons(my_port);
+
+	long flag = 1;
+	setsockopt(m_socket_id, SOL_SOCKET, SO_REUSEADDR, (char *)&flag, sizeof(flag));
+
+	if (bind(m_socket_id, (sockaddr*)&my_addr, sizeof(sockaddr)) < 0) {
+		perror("bind error");
 		return 0;
 	}
+
+	// 连接服务器
+	struct sockaddr_in server_addr;
+	server_addr.sin_addr.s_addr = server_ip;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(server_port);
+	printf("Try to connect server(%s:%u)\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+	// while(0 != connect(m_socket_id, (struct sockaddr *)&server_addr, sizeof(sockaddr))) {
+	// 	usleep(100*1000);
+	// }
+	if(connect(m_socket_id, (struct sockaddr *)&server_addr, sizeof(sockaddr))) {  
+		perror("connect出错！");  
+		exit(1);  
+	}  
+	// printf("Connect server success(%s:%u)\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+
 	// 注册
-	sprintf(buf, "reg: %d %s \n", pid, pname.c_str());
+	memset(buf,0,sizeof(buf));
+	sprintf(buf, "reg: %d %s \n", my_id, my_name.c_str());
 	len = strlen(buf);
-	if ((sendbytes = send(sock_fd, buf, len, 0)) != len) {
-		perror("send error");
-		close(sock_fd);
+	if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
+		perror("Send error");
+		close(m_socket_id);
 		return 0;
 	}
+	perror("Send success");
 	// 开始比赛
 	while (true) {
-		if((recvbytes=recv(sock_fd, buf, MAXDATASIZE, MSG_WAITALL)) == -1) {  
+		perror("Waiting for msg!!!!");
+		recvbytes = 0;
+		if((recvbytes=recv(m_socket_id, buf, MAXDATASIZE, MSG_WAITALL)) == -1) {  
 			perror("recv出错！");  
 			continue;
 		} 
@@ -81,7 +106,7 @@ int main(int argc, char *argv[]) {
 			break;
 		} else if (s == "blind/") {
 			while (ss >> s, s != "/blind") {
-				if (pid == atoi(s.c_str())) {
+				if (my_id == atoi(s.c_str())) {
 					ss >> s;
 					player.bet(atoi(s.c_str()));
 				}
@@ -95,9 +120,9 @@ int main(int argc, char *argv[]) {
 			// TODO response
 			sprintf(buf, "call");
 			len = strlen(buf);
-			if ((sendbytes = send(sock_fd, buf, len, 0)) != len) {
+			if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
 				perror("send error");
-				close(sock_fd);
+				close(m_socket_id);
 				return 0;
 			}
 		} else if (s == "flop/") {
@@ -121,6 +146,6 @@ int main(int argc, char *argv[]) {
 	}
 
 
-	close(sock_fd);  
+	close(m_socket_id);  
 	return 0;
 }
