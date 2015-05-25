@@ -16,5 +16,10 @@
 #define FULL_HOUSE			7	// 葫芦
 #define FOUR_OF_A_KIND		8	// 四条
 #define STRAIGHT_FLUSH		9	// 同花顺
+// 状态
+#define HOLD				0	// 底牌后询问
+#define FLOP				1	// 三张公共牌后询问
+#define TURN				2	// 转牌后询问
+#define RIVER				3	// 河牌后询问
 
 #endif

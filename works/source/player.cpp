@@ -2,6 +2,10 @@
 
 Player::Player() {
 	clear();
+	money = jetton = 2000;
+	maxInitialMoney = 2000;
+	smallBind = 20;
+	bigBind = 40;
 }
 
 void Player::clear() {
@@ -32,6 +36,7 @@ void Player::setHoldCards(Card card1, Card card2) {
 
 void Player::startRound() {
 	now = round = circle = 0;
+	money = jetton = 2000;
 }
 
 void Player::bet(int _bet) {
@@ -40,4 +45,12 @@ void Player::bet(int _bet) {
 		jetton += maxInitialMoney;
 		money -= maxInitialMoney;
 	}
+}
+
+int Player::status() {
+	return _status;
+}
+
+void Player::status(int s) {
+	_status = s;
 }

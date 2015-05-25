@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
 	string s;
 	Player player;
 	string s_color,s_point;
+	int count = 0;
 
 	if (argc != 6) {
 		printf("Input format error\n");
@@ -87,18 +88,14 @@ int main(int argc, char *argv[]) {
 	perror("Send success");
 	// 开始比赛
 	while (true) {
-		perror("Waiting for msg!!!!");
-		recvbytes = 0;
-		if((recvbytes=recv(m_socket_id, buf, MAXDATASIZE, MSG_WAITALL)) == -1) {  
-			perror("recv出错！");  
-			continue;
-		} 
-		if (recvbytes == 0) continue;
+		recvbytes=recv(m_socket_id, buf, MAXDATASIZE, 0);
+		if (recvbytes <= 0) continue;
 		// 开始解析
 		ss.clear();
 		ss.str(string(buf,recvbytes));
 		ss >> s;
 		if (s == "seat/") {
+			count++;
 			// TODO maxInitialMoney
 			player.startRound();
 
@@ -112,6 +109,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		} else if (s == "hold/") {
+			player.status(HOLD);
 			for(int i=0;i<2;i++) {
 				ss >> s_color >> s_point;
 				player.addHold(Card(s_color, s_point));
@@ -126,15 +124,18 @@ int main(int argc, char *argv[]) {
 				return 0;
 			}
 		} else if (s == "flop/") {
+			player.status(FLOP);
 			for(int i=0;i<3;i++) {
 				ss >> s_color >> s_point;
 				player.addCard(Card(s_color, s_point));
 			}
 
 		} else if (s == "turn/") {
+			player.status(TURN);
 			ss >> s_color >> s_point;
 			player.addCard(Card(s_color, s_point));
 		} else if (s == "river/") {
+			player.status(RIVER);
 			ss >> s_color >> s_point;
 			player.addCard(Card(s_color, s_point));
 		} else if (s == "showdown/") {
