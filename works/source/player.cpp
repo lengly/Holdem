@@ -36,7 +36,6 @@ void Player::setHoldCards(Card card1, Card card2) {
 
 void Player::startRound() {
 	now = round = circle = 0;
-	money = jetton = 2000;
 }
 
 void Player::bet(int _bet) {
@@ -45,6 +44,10 @@ void Player::bet(int _bet) {
 		jetton += maxInitialMoney;
 		money -= maxInitialMoney;
 	}
+}
+
+void Player::win(int _win) {
+	jetton += _win;
 }
 
 int Player::status() {

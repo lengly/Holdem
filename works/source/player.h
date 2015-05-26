@@ -23,6 +23,7 @@ public:
 	int checkResult();
 	void startRound();
 	void bet(int _bet);
+	void win(int _win);
 	int status();
 	void status(int s);
 };

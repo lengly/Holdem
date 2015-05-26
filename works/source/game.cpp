@@ -13,21 +13,122 @@
 #include <sstream>
 #include "game.h"
 #include "player.h"
+#include <queue>
 #define MAXDATASIZE 1000
 
 using namespace std;
 
 int m_socket_id = -1;
+queue<string> que;
+int qc = 0;
+char buf[MAXDATASIZE];
+int recvbytes, sendbytes, len;
+Player player;
+int count = 0;
+string s_color,s_point;
+int my_id;
 
-int main(int argc, char *argv[]) {
-	int recvbytes, sendbytes, len;
-	string pname = "lengly";
-	char buf[MAXDATASIZE];
+void receive() {
 	stringstream ss;
 	string s;
-	Player player;
-	string s_color,s_point;
-	int count = 0;
+
+	recvbytes=recv(m_socket_id, buf, MAXDATASIZE, 0);
+	if (recvbytes <= 0) return;
+
+	ss.clear();
+	ss.str(string(buf,recvbytes));
+	while (ss >> s) {
+		que.push(s);
+		if (s[0] == '/' && s != "/common") {
+			qc++;
+		} else if (s == "game-over") {
+			qc++;
+		}
+	}
+}
+
+bool solve() {
+	string s;
+	while (qc > 0) {
+		qc--;
+		s = que.front();
+		que.pop();
+		if (s == "seat/") {
+			count++;
+			// TODO maxInitialMoney
+			player.startRound();
+
+		} else if (s == "game-over") {
+			return true;;
+		} else if (s == "blind/") {
+			while (s = que.front(), que.pop(), s != "/blind") {
+				if (my_id == atoi(s.c_str())) {
+					s = que.front();
+					que.pop();
+					player.bet(atoi(s.c_str()));
+				} else {
+					que.pop();
+				}
+			}
+		} else if (s == "hold/") {
+			player.status(HOLD);
+			for(int i=0;i<2;i++) {
+				s_color = que.front(); que.pop();
+				s_point = que.front(); que.pop();
+				player.addHold(Card(s_color, s_point));
+			}
+			que.pop();
+		} else if (s == "inquire/") {
+			// TODO response
+			sprintf(buf, "call");
+			len = strlen(buf);
+			if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
+				perror("send error");
+				close(m_socket_id);
+				return 0;
+			}
+		} else if (s == "flop/") {
+			player.status(FLOP);
+			for(int i=0;i<3;i++) {
+				s_color = que.front(); que.pop();
+				s_point = que.front(); que.pop();
+				player.addCard(Card(s_color, s_point));
+			}
+			que.pop();
+		} else if (s == "turn/") {
+			player.status(TURN);
+			s_color = que.front(); que.pop();
+			s_point = que.front(); que.pop();
+			player.addCard(Card(s_color, s_point));
+			que.pop();
+		} else if (s == "river/") {
+			player.status(RIVER);
+			s_color = que.front(); que.pop();
+			s_point = que.front(); que.pop();
+			player.addCard(Card(s_color, s_point));
+			que.pop();
+		} else if (s == "showdown/") {
+			while (s != "/showdown") {
+				s = que.front();
+				que.pop();
+			}
+		} else if (s == "pot-win/") {
+			while (s = que.front(), que.pop(), s != "/pot-win") {
+				if (my_id == atoi(s.c_str())) {
+					s = que.front();
+					que.pop();
+					player.win(atoi(s.c_str()));
+				} else {
+					que.pop();
+				}
+			}
+		}
+	}
+	return false;
+}
+
+int main(int argc, char *argv[]) {
+	string pname = "lengly";
 
 	if (argc != 6) {
 		printf("Input format error\n");
@@ -38,7 +139,7 @@ int main(int argc, char *argv[]) {
 	in_port_t server_port = atoi(argv[2]);
 	in_addr_t my_ip = inet_addr(argv[3]);
 	in_port_t my_port = atoi(argv[4]);
-	int my_id = atoi(argv[5]);
+	my_id = atoi(argv[5]);
 	string my_name = "lengly";
 
 	// 建立socket连接
@@ -86,66 +187,19 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 	perror("Send success");
+	que = queue<string>();
+	qc = 0;
 	// 开始比赛
 	while (true) {
-		recvbytes=recv(m_socket_id, buf, MAXDATASIZE, 0);
-		if (recvbytes <= 0) continue;
+		// 接收消息
+		receive();
+
+		// 是否有至少一条完整指令
+		if (qc <= 0) continue;
+
 		// 开始解析
-		ss.clear();
-		ss.str(string(buf,recvbytes));
-		ss >> s;
-		if (s == "seat/") {
-			count++;
-			// TODO maxInitialMoney
-			player.startRound();
-
-		} else if (s == "game-over") {
-			break;
-		} else if (s == "blind/") {
-			while (ss >> s, s != "/blind") {
-				if (my_id == atoi(s.c_str())) {
-					ss >> s;
-					player.bet(atoi(s.c_str()));
-				}
-			}
-		} else if (s == "hold/") {
-			player.status(HOLD);
-			for(int i=0;i<2;i++) {
-				ss >> s_color >> s_point;
-				player.addHold(Card(s_color, s_point));
-			}
-		} else if (s == "inquire/") {
-			// TODO response
-			sprintf(buf, "call");
-			len = strlen(buf);
-			if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
-				perror("send error");
-				close(m_socket_id);
-				return 0;
-			}
-		} else if (s == "flop/") {
-			player.status(FLOP);
-			for(int i=0;i<3;i++) {
-				ss >> s_color >> s_point;
-				player.addCard(Card(s_color, s_point));
-			}
-
-		} else if (s == "turn/") {
-			player.status(TURN);
-			ss >> s_color >> s_point;
-			player.addCard(Card(s_color, s_point));
-		} else if (s == "river/") {
-			player.status(RIVER);
-			ss >> s_color >> s_point;
-			player.addCard(Card(s_color, s_point));
-		} else if (s == "showdown/") {
-
-		} else if (s == "pot-win/") {
-
-		}
-
+		if (solve()) break;
 	}
-
 
 	close(m_socket_id);  
 	return 0;
