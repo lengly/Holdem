@@ -68,5 +68,5 @@ void Player::setMoney(int _money, int _jetton) {
 }
 
 double Player::calcProbility() {
-	
+	return Card::calc(myCards, common, cards);
 }
