@@ -10,7 +10,7 @@ private:
 	std::vector<Card> common;		// 公共牌 最多五张
 	std::vector<Card> myCards;		// 底牌
 	int money, jetton;				// 剩余金币 当前筹码 
-	int circle, round, now;			// 这一圈的下注 这一轮的下注 当前应下注金额
+	int circle, now;				// 这一圈的下注 当前总下注金额
 	int maxInitialMoney;			// 最大进场筹码
 	int smallBind, bigBind;			// 小盲注 大盲注
 	int _status;
@@ -22,10 +22,13 @@ public:
 	void setHoldCards(Card card1, Card card2);
 	int checkResult();
 	void startRound();
+	void startCircle();
 	void bet(int _bet);
 	void win(int _win);
 	int status();
 	void status(int s);
+	void setMoney(int _money, int _jetton);
+	double calcProbility();
 };
 
 #endif

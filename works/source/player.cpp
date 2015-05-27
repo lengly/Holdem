@@ -12,7 +12,7 @@ void Player::clear() {
 	cards.clear();
 	common.clear();
 	myCards.clear();
-	circle = round = now = 0;
+	circle = now = 0;
 	money = jetton = 0;
 	maxInitialMoney = 0;
 }
@@ -35,7 +35,11 @@ void Player::setHoldCards(Card card1, Card card2) {
 }
 
 void Player::startRound() {
-	now = round = circle = 0;
+	now = circle = 0;
+}
+
+void Player::startCircle() {
+	circle = 0;
 }
 
 void Player::bet(int _bet) {
@@ -56,4 +60,13 @@ int Player::status() {
 
 void Player::status(int s) {
 	_status = s;
+}
+
+void Player::setMoney(int _money, int _jetton) {
+	money = _money;
+	jetton = _jetton;
+}
+
+double Player::calcProbility() {
+	
 }

@@ -1,5 +1,5 @@
 default:
-	g++ game.cpp player.cpp -o game
+	g++ game.cpp player.cpp card.cpp -o game
 	g++ server.cpp -o server
 
 mov:

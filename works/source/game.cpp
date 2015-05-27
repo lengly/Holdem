@@ -49,15 +49,22 @@ void receive() {
 
 bool solve() {
 	string s;
+	int maxBet; // 当前单人下注最大金额
+	int totBet; // 总下注金额
+	int t_pid, t_jetton, t_money, t_now;
+	string t_action;
+	double p;
 	while (qc > 0) {
 		qc--;
 		s = que.front();
 		que.pop();
 		if (s == "seat/") {
 			count++;
-			// TODO maxInitialMoney
 			player.startRound();
-
+			while (s != "/seat") {
+				s = que.front();
+				que.pop();
+			}
 		} else if (s == "game-over") {
 			return true;;
 		} else if (s == "blind/") {
@@ -72,6 +79,7 @@ bool solve() {
 			}
 		} else if (s == "hold/") {
 			player.status(HOLD);
+			player.startCircle();
 			for(int i=0;i<2;i++) {
 				s_color = que.front(); que.pop();
 				s_point = que.front(); que.pop();
@@ -79,7 +87,31 @@ bool solve() {
 			}
 			que.pop();
 		} else if (s == "inquire/") {
-			// TODO response
+			maxBet = 0;
+			while (s = que.front(), que.pop(), s != "/inquire") {
+				if (s == "tot") {
+					s = que.front(); que.pop();
+					s = que.front(); que.pop();
+					totBet = atoi(s.c_str());
+				} else {
+					t_pid = atoi(s.c_str());
+					s = que.front(); que.pop();
+					t_jetton = atoi(s.c_str());
+					s = que.front(); que.pop();
+					t_money = atoi(s.c_str());
+					s = que.front(); que.pop();
+					t_now = atoi(s.c_str());
+					s = que.front(); que.pop();
+					t_action = s;
+
+					if (maxBet < t_now) maxBet = t_now;
+				}
+			}
+
+			if (player.status() > 0) {
+				p = player.calcProbility();	
+			}
+
 			sprintf(buf, "call");
 			len = strlen(buf);
 			if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
@@ -89,6 +121,7 @@ bool solve() {
 			}
 		} else if (s == "flop/") {
 			player.status(FLOP);
+			player.startCircle();
 			for(int i=0;i<3;i++) {
 				s_color = que.front(); que.pop();
 				s_point = que.front(); que.pop();
@@ -97,12 +130,14 @@ bool solve() {
 			que.pop();
 		} else if (s == "turn/") {
 			player.status(TURN);
+			player.startCircle();
 			s_color = que.front(); que.pop();
 			s_point = que.front(); que.pop();
 			player.addCard(Card(s_color, s_point));
 			que.pop();
 		} else if (s == "river/") {
 			player.status(RIVER);
+			player.startCircle();
 			s_color = que.front(); que.pop();
 			s_point = que.front(); que.pop();
 			player.addCard(Card(s_color, s_point));
