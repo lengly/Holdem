@@ -36,10 +36,6 @@ void Card::clear() {
 	 color = point = 0;
 }
 
-bool Card::compare(std::vector<Card> my, std::vector<Card> cmpr) {
-	return true;
-}
-
 double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<Card> total) {
 	// 这里对手使用common  自己使用total
 	int win = 0, lose = 0;
@@ -124,6 +120,30 @@ double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<
 	double p = win + lose;
 	if (p > 0) p = win / p;
 	return p;
+}
+
+bool Card::compare(std::vector<Card> my, std::vector<Card> cmpr) {
+	if (my.size() != 7 || cmpr.size() != 7) return false;
+	int level_my = sevenToFive(my);
+	int level_cmpr = sevenToFive(cmpr);
+	if (level_my > level_cmpr) return true;
+	if (level_my < level_cmpr) return false;
+
+	if (my.size() != 5 || cmpr.size() != 5) return false;
+	for(int i=0;i<my.size();i++) {
+		if (my[i].point > cmpr[i].point) return true;
+		if (my[i].point < cmpr[i].point) return false;
+	}
+	return false;
+}
+
+int Card::sevenToFive(std::vector<Card> &p) {
+	// TODO
+
+
+
+
+	return 0;
 }
 
 bool Card::operator == (const Card &c) {

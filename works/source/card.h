@@ -14,6 +14,7 @@ public:
 	void clear();
 	static double calc(std::vector<Card> hold, std::vector<Card> common, std::vector<Card> total);
 	static bool compare(std::vector<Card> my, std::vector<Card> cmpr);
+	static int sevenToFive(std::vector<Card> &p);
 
 	bool operator == (const Card &c);
 	bool operator != (const Card &c);
