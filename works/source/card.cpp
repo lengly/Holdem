@@ -37,15 +37,24 @@ void Card::clear() {
 	 color = point = 0;
 }
 
-double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<Card> total) {
+double Card::calc(std::vector<Card> _hold, std::vector<Card> _common, std::vector<Card> _total) {
 	// 这里对手使用common  自己使用total
+	int nc = _common.size(), nt = _total.size();
+	Card common[7], total[7];
+	for(int i = 0; i < nc; i++) {
+		common[i] = _common[i];
+	}
+	for(int i = 0; i < nt; i++) {
+		total[i] = _total[i];
+	}
+
 	int win = 0, lose = 0;
 	bool flag[5][15];
 	memset(flag,1,sizeof(flag));
-	for(int i=0;i<total.size();i++) {
+	for(int i = 0; i < nt; i++) {
 		flag[total[i].color][total[i].point] = false;
 	}
-	int n = 5 - common.size();
+	int n = 5 - nc;
 	int p1,c1,p2,c2,p3,c3,p4,c4;
 	
 	// 枚举对手底牌
@@ -53,13 +62,13 @@ double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<
 		for(int p1 = 2; p1 < 15; p1++) {
 			if (flag[c1][p1]) {
 				flag[c1][p1] = false;
-				common.push_back(Card(c1, p1));
+				common[nc++] = Card(c1, p1);
 				for(int c2 = c1; c2 < 5; c2++) {
 					for(int p2 = 2; p2 < 15; p2++) {
 						if (c2 == c1 && p2 <= p1) continue;
 						if (flag[c2][p2]) {
 							flag[c2][p2] = false;
-							common.push_back(Card(c2, p2));
+							common[nc++] = Card(c2, p2);
 							// 枚举剩余公共牌
 							if (n == 0) {
 								compare(total, common) ? win++ : lose++;
@@ -68,14 +77,14 @@ double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<
 									for(int p3 = 2; p3 < 15; p3++) {
 										if (flag[c3][p3]) {
 											flag[c3][p3] = false;
-											common.push_back(Card(c3, p3));
-											total.push_back(Card(c3, p3));
+											common[nc++] = Card(c3, p3);
+											total[nt++] = common[nc-1];
 
 											compare(total, common) ? win++ : lose++;
 
 											flag[c3][p3] = true;
-											common.pop_back();
-											total.pop_back();
+											nc--;
+											nt--;
 										}
 									}
 								}
@@ -84,37 +93,37 @@ double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<
 									for(int p3 = 2; p3 < 15; p3++) {
 										if (flag[c3][p3]) {
 											flag[c3][p3] = false;
-											common.push_back(Card(c3, p3));
-											total.push_back(Card(c3, p3));
+											common[nc++] = Card(c3, p3);
+											total[nt++] = common[nc-1];
 											for(int c4 = c3; c4 < 5; c4++) {
 												for(int p4 = 2; p4 < 15; p4++) {
 													if (flag[c4][p4]) {
 														flag[c4][p4] = false;
-														common.push_back(Card(c4, p4));
-														total.push_back(Card(c4, p4));
+														common[nc++] = Card(c4, p4);
+														total[nt++] = common[nc-1];
 
 														compare(total, common) ? win++ : lose++;
 
 														flag[c4][p4] = true;
-														common.pop_back();
-														total.pop_back();
+														nc--;
+														nt--;
 													}
 												}
 											}
 											flag[c3][p3] = true;
-											common.pop_back();
-											total.pop_back();
+											nc--;
+											nt--;
 										}
 									}
 								}
 							}
 							flag[c2][p2] = true;
-							common.pop_back();
+							nc--;
 						}
 					}
 				}
 				flag[c1][p1] = true;
-				common.pop_back();
+				nc--;
 			}
 		}
 	}
@@ -123,26 +132,30 @@ double Card::calc(std::vector<Card> hold, std::vector<Card> common, std::vector<
 	return p;
 }
 
-bool Card::compare(std::vector<Card> my, std::vector<Card> cmpr) {
-	if (my.size() != 7 || cmpr.size() != 7) return false;
+bool Card::compare(Card* _my, Card* _cmpr) {
+	Card my[7], cmpr[7];
+	for(int i = 0; i < 7; i++) {
+		my[i] = _my[i];
+		cmpr[i] = _cmpr[i];
+	}
+
 	int level_my = sevenToFive(my);
 	int level_cmpr = sevenToFive(cmpr);
 	if (level_my > level_cmpr) return true;
 	if (level_my < level_cmpr) return false;
 
-	if (my.size() != 5 || cmpr.size() != 5) return false;
-	for(int i=0;i<my.size();i++) {
+	for(int i = 0; i < 5; i++) {
 		if (my[i].point > cmpr[i].point) return true;
 		if (my[i].point < cmpr[i].point) return false;
 	}
 	return false;
 }
 
-int Card::sevenToFive(std::vector<Card> &p) {
+int Card::sevenToFive(Card* p) {
 	bool flag;
 	int i, j, status;
 	// 同花顺
-	sort(p.begin(), p.end(), cmp1());
+	std::sort(p, p + 7, cmp1());
 	for(i = 0; i < 3; i++) {
 		flag = true;
 		for(j = i + 1; j < i + 5; j++) {
@@ -157,7 +170,7 @@ int Card::sevenToFive(std::vector<Card> &p) {
 		}
 	}
 	// 四条
-	sort(p.begin(), p.end(), cmp2());
+	std::sort(p, p + 7, cmp2());
 	for(i = 0; i < 4; i++) {
 		flag = true;
 		for(j = i + 1; j < i + 4; j++) {
@@ -187,7 +200,7 @@ int Card::sevenToFive(std::vector<Card> &p) {
 		}
 	}
 	// 同花
-	sort(p.begin(), p.end(), cmp1());
+	std::sort(p, p + 7, cmp1());
 	for(i = 0; i < 3; i++) {
 		flag = true;
 		for(j = i + 1; j < i + 5; j++) {
@@ -202,7 +215,7 @@ int Card::sevenToFive(std::vector<Card> &p) {
 		}
 	}
 	// 顺子
-	sort(p.begin(), p.end(), cmp2());
+	std::sort(p, p + 7, cmp2());
 	for(i = 0; i < 3; i++) {
 		flag = true;
 		for(j = i + 1; j < i + 5; j++) {
@@ -244,7 +257,7 @@ int Card::sevenToFive(std::vector<Card> &p) {
 			}
 			std::swap(p[0], p[i]);
 			std::swap(p[1], p[i+1]);
-			sort(p.begin()+2, p.end(), cmp2());
+			std::sort(p + 2, p + 7, cmp2());
 			i = 0;
 			status = ONE_PAIR;
 			goto end;
@@ -254,16 +267,21 @@ int Card::sevenToFive(std::vector<Card> &p) {
 	i = 0;
 	status = HIGH_CARD;
 end:
-	if (i == 0) p.erase(p.begin()+5),p.erase(p.begin()+5);
-	if (i == 1) p.erase(p.begin()+0),p.erase(p.begin()+5);
-	if (i == 2) p.erase(p.begin()+0),p.erase(p.begin()+0);
+	for(j = 0; j < 5; j++) {
+		p[j] = p[i+j];
+	}
 	return status;
 }
 
 bool Card::operator == (const Card &c) {
 	return (this->color == c.color) && (this->point == c.point);
 }
-
+/*
 bool Card::operator != (const Card &c) {
 	return (this->color != c.color) || (this->point != c.point);
+}
+*/
+void Card::operator = (const Card &c) {
+	this->color = c.color;
+	this->point = c.point;
 }
