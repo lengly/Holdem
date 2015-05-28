@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <vector>
 #include <algorithm>
+#include <cstdio>
 
 Card::Card(int _color, int _point) {
 	color = _color;
@@ -55,9 +56,39 @@ double Card::calc(std::vector<Card> _hold, std::vector<Card> _common, std::vecto
 		flag[total[i].color][total[i].point] = false;
 	}
 	int n = 5 - nc;
-	int p1,c1,p2,c2,p3,c3,p4,c4;
 	
+	// random
+	Card enu[7];
+	srand(time(NULL));
+	int c, p;
+	for(int i = 0; i < MAX_ENU_TIME; i++) {
+		for(int j = 0; j < n + 2; j++) {
+			while( c=(rand()%4)+1, p=(rand()%13+2), !flag[c][p] );
+			flag[c][p] = false;
+			enu[j] = Card(c,p);	
+		}
+		for(int j = 0; j < n; j++) {
+			common[4-j] = enu[j];
+			total[6-j] = enu[j];
+		}
+		common[5] = enu[n];
+		common[6] = enu[n+1];
+
+		compare(total, common) ? win++ : lose++;
+
+		for(int j = 0; j < n + 2; j++) {
+			flag[enu[j].color][enu[j].point] = true;
+		}
+	}
+	double pbt1 = win + lose;
+	if (pbt1 > 0) pbt1 = win / pbt1;
+	return pbt1;
+	/*
+	// printf("%.6lf\n", pbt);
+	win = lose = 0;
+
 	// 枚举对手底牌
+	int p1,c1,p2,c2,p3,c3,p4,c4;
 	for(int c1 = 1; c1 < 5; c1++) {
 		for(int p1 = 2; p1 < 15; p1++) {
 			if (flag[c1][p1]) {
@@ -127,9 +158,11 @@ double Card::calc(std::vector<Card> _hold, std::vector<Card> _common, std::vecto
 			}
 		}
 	}
-	double p = win + lose;
-	if (p > 0) p = win / p;
-	return p;
+	double pbt2 = win + lose;
+	if (pbt2 > 0) pbt2 = win / pbt2;
+	printf("%.6lf\n", pbt2);
+	return pbt1-pbt2;
+	*/
 }
 
 bool Card::compare(Card* _my, Card* _cmpr) {

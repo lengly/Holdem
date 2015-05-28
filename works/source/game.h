@@ -21,5 +21,7 @@
 #define FLOP				1	// 三张公共牌后询问
 #define TURN				2	// 转牌后询问
 #define RIVER				3	// 河牌后询问
+//计算概率时的枚举次数
+#define MAX_ENU_TIME		100000
 
 #endif

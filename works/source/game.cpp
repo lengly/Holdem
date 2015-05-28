@@ -52,6 +52,7 @@ bool solve() {
 	int maxBet; // 当前单人下注最大金额
 	int totBet; // 总下注金额
 	int t_pid, t_jetton, t_money, t_now;
+	int alive; // 活着人数
 	string t_action;
 	double p;
 	while (qc > 0) {

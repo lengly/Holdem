@@ -28,32 +28,50 @@ void test_7to5() {
 }
 
 void test_calc() {
+	bool flag[4][12];
+	memset(flag,1,sizeof(flag));
+	int c,p;
 	vector<Card> hold, common, total;
-	hold.push_back(Card(1,10));
-	hold.push_back(Card(2,10));
+	
+	for(int i = 0; i < 2; i++) {
+		while( c=(rand()%4)+1, p=(rand()%13+2), !flag[c][p] );
+		flag[c][p] = false;
+		hold.push_back(Card(c,p));
+	}
+	hold[0] = Card(1,13);
+	hold[1] = Card(3,2);
+	// for(int i = 0; i < 3; i++) {
+	// 	while( c=(rand()%4)+1, p=(rand()%13+2), !flag[c][p] );
+	// 	flag[c][p] = false;
+	// 	common.push_back(Card(c,p));
+	// }
+/*
+	hold.push_back(Card(2,9));
 	common.push_back(Card(1,2));
 	common.push_back(Card(2,4));
 	common.push_back(Card(3,10));
 	// common.push_back(Card(4,8));
-
+*/
 	total.push_back(hold[0]);
 	total.push_back(hold[1]);
-	total.push_back(common[0]);
-	total.push_back(common[1]);
-	total.push_back(common[2]);
+	// total.push_back(common[0]);
+	// total.push_back(common[1]);
+	// total.push_back(common[2]);
 	// total.push_back(common[3]);
 
 	double ans = Card::calc(hold, common, total);
-	printf("%.6lf\n", ans);
+	printf("%.6lf\n==========\n", ans);
 }
 
 int main() {
+	// freopen("output","w",stdout);
 	clock_t  clockBegin, clockEnd;    
     clockBegin = clock();    
 
     // for(int i=0;i<6000000;i++)  // 14s
     // 	test_7to5();
-	test_calc();
+    for(int i=0;i<1;i++)
+		test_calc();
  
 	clockEnd = clock();    
     printf("time:  %.6lf\n", (clockEnd - clockBegin) / 1000000.0);    
