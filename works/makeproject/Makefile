@@ -9,5 +9,10 @@ replay:
 	mv ~/git/run_area/server/replay.txt ~/git/ViewClientForReplay/
 	firefox viewclient.html
 
+test:
+	g++ ../source/test.cpp ../source/card.cpp -o test
+	./test
+	rm test
+
 clean:
 	rm -f ../target/game
