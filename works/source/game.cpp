@@ -108,11 +108,11 @@ bool solve() {
 				}
 			}
 
-			if (player.status() > 0) {
-				p = player.calcProbility();	
-			}
+			// if (player.status() > 0) {
+			// 	p = player.calcProbility();	
+			// }
 
-			sprintf(buf, "call");
+			sprintf(buf, "fold");
 			len = strlen(buf);
 			if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
 				perror("send error");
@@ -203,14 +203,14 @@ int main(int argc, char *argv[]) {
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(server_port);
 	printf("Try to connect server(%s:%u)\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
-	// while(0 != connect(m_socket_id, (struct sockaddr *)&server_addr, sizeof(sockaddr))) {
-	// 	usleep(100*1000);
-	// }
-	if(connect(m_socket_id, (struct sockaddr *)&server_addr, sizeof(sockaddr))) {  
-		perror("connect出错！");  
-		exit(1);  
-	}  
-	// printf("Connect server success(%s:%u)\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
+	while(0 != connect(m_socket_id, (struct sockaddr *)&server_addr, sizeof(sockaddr))) {
+		usleep(100*1000);
+	}
+	// if(connect(m_socket_id, (struct sockaddr *)&server_addr, sizeof(sockaddr))) {  
+	// 	perror("connect出错！");  
+	// 	exit(1);  
+	// }  
+	printf("Connect server success(%s:%u)\n", inet_ntoa(server_addr.sin_addr), ntohs(server_addr.sin_port));
 
 	// 注册
 	memset(buf,0,sizeof(buf));

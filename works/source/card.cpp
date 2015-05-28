@@ -2,6 +2,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <algorithm>
 
 Card::Card(int _color, int _point) {
 	color = _color;
@@ -138,12 +139,125 @@ bool Card::compare(std::vector<Card> my, std::vector<Card> cmpr) {
 }
 
 int Card::sevenToFive(std::vector<Card> &p) {
-	// TODO
+	bool flag;
+	int i, j, status;
+	// 同花顺
+	sort(p.begin(), p.end(), cmp1());
+	for(i = 0; i < 3; i++) {
+		flag = true;
+		for(j = i + 1; j < i + 5; j++) {
+			if (p[j].color != p[i].color || p[j].point != p[j-1].point-1) {
+				flag = false;
+				break;
+			}
+		}
+		if (flag) {
+			status = STRAIGHT_FLUSH;
+			goto end;
+		}
+	}
+	// 四条
+	sort(p.begin(), p.end(), cmp2());
+	for(i = 0; i < 4; i++) {
+		flag = true;
+		for(j = i + 1; j < i + 4; j++) {
+			if (p[j].point != p[i].point) {
+				flag = false;
+				break;
+			}
+		}
+		if (flag) {
+			status = FOUR_OF_A_KIND;
+			goto end;	
+		}
+	}
+	// 葫芦
+	for(i = 0; i < 5; i++) {
+		flag = true;
+		if (p[i].point != p[i+1].point) flag = false;
+		if (p[i].point != p[i+2].point) flag = false;
 
-
-
-
-	return 0;
+		if (flag) {
+			for(j = i + 3; j < i + 6; j++) {
+				if (p[j%7].point == p[(j+1)%7].point) {
+					status = FULL_HOUSE;
+					goto end;		
+				}
+			}
+		}
+	}
+	// 同花
+	sort(p.begin(), p.end(), cmp1());
+	for(i = 0; i < 3; i++) {
+		flag = true;
+		for(j = i + 1; j < i + 5; j++) {
+			if (p[j].color != p[i].color) {
+				flag = false;
+				break;
+			}
+		}
+		if (flag) {
+			status = FLUSH;
+			goto end;
+		}
+	}
+	// 顺子
+	sort(p.begin(), p.end(), cmp2());
+	for(i = 0; i < 3; i++) {
+		flag = true;
+		for(j = i + 1; j < i + 5; j++) {
+			if (p[j].point != p[j-1].point - 1) {
+				flag = false;
+				break;
+			}
+		}
+		if (flag) {
+			status = STRAIGHT;
+			goto end;
+		}
+	}
+	// 三条
+	for(i = 0; i < 5; i++) {
+		flag = true;
+		if (p[i].point != p[i+1].point) flag = false;
+		if (p[i].point != p[i+2].point) flag = false;
+		if (flag) {
+			status = THREE_OF_A_KIND;
+			goto end;
+		}
+	}
+	// 两对  一对
+	for(i = 0; i < 4; i++) {
+		if (p[i].point == p[i+1].point) {
+			for(j = i + 2; j < 6; j++) {
+				if (p[j].point == p[j+1].point) {
+					std::swap(p[0], p[i]);
+					std::swap(p[1], p[i+1]);
+					std::swap(p[2], p[j]);
+					std::swap(p[3], p[j+1]);
+					if (p[4].point < p[5].point) std::swap(p[4], p[5]);
+					if (p[4].point < p[5].point) std::swap(p[4], p[5]);
+					i = 0;
+					status = TWO_PAIR;
+					goto end;	
+				}
+			}
+			std::swap(p[0], p[i]);
+			std::swap(p[1], p[i+1]);
+			sort(p.begin()+2, p.end(), cmp2());
+			i = 0;
+			status = ONE_PAIR;
+			goto end;
+		}
+	}
+	// 高牌
+	i = 0;
+	status = HIGH_CARD;
+end:
+	if (i == 0) p.erase(p.begin()+5),p.erase(p.begin()+5);
+	if (i == 1) p.erase(p.begin()+0),p.erase(p.begin()+5);
+	if (i == 2) p.erase(p.begin()+0),p.erase(p.begin()+0);
+	return status;
 }
 
 bool Card::operator == (const Card &c) {
