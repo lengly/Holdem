@@ -36,6 +36,9 @@ void Player::setHoldCards(Card card1, Card card2) {
 
 void Player::startRound() {
 	now = circle = 0;
+	cards.clear();
+	common.clear();
+	myCards.clear();
 }
 
 void Player::startCircle() {

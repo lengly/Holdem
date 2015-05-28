@@ -51,7 +51,7 @@ bool solve() {
 	string s;
 	int maxBet; // 当前单人下注最大金额
 	int totBet; // 总下注金额
-	int t_pid, t_jetton, t_money, t_now;
+	int t_pid, t_jetton, t_money, t_now, my_now;
 	int alive; // 活着人数
 	string t_action;
 	double p;
@@ -88,9 +88,11 @@ bool solve() {
 			}
 			que.pop();
 		} else if (s == "inquire/") {
+			
 			maxBet = 0;
+			alive = 0;
 			while (s = que.front(), que.pop(), s != "/inquire") {
-				if (s == "tot") {
+				if (s == "total") {
 					s = que.front(); que.pop();
 					s = que.front(); que.pop();
 					totBet = atoi(s.c_str());
@@ -104,16 +106,43 @@ bool solve() {
 					t_now = atoi(s.c_str());
 					s = que.front(); que.pop();
 					t_action = s;
-
+					if (t_action == "fold") alive++;
+					if (t_pid == my_id) my_now = t_now;
 					if (maxBet < t_now) maxBet = t_now;
 				}
 			}
 
+			my_now = maxBet - my_now;
+			if (alive == 1) {
+				//如果所有人都弃牌  check
+				sprintf(buf, "check");
+			} else if (my_now <= 20) {
+				sprintf(buf, "call");
+				player.bet(my_now);
+			//} else if (count < 200) {
+			//	sprintf(buf, "fold");
+			} else if (player.status() == HOLD) {
+				p = player.calcProbility();	
+				if (my_now < 100 && p > 0.7) {
+					sprintf(buf, "call");
+					player.bet(my_now);
+				} else {
+					sprintf(buf, "fold");
+				}
+			} else {
+				p = player.calcProbility();	
+				if (my_now < 500 && p > 0.9) {
+					sprintf(buf, "call");
+					player.bet(my_now);
+				} else {
+					sprintf(buf, "fold");
+				}
+			}
 			// if (player.status() > 0) {
 			// 	p = player.calcProbility();	
 			// }
 
-			sprintf(buf, "fold");
+			// sprintf(buf, "all_in");
 			len = strlen(buf);
 			if ((sendbytes = send(m_socket_id, buf, len, 0)) != len) {
 				perror("send error");

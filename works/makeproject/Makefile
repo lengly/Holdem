@@ -3,7 +3,7 @@ default:
 	#g++ server.cpp -o server
 
 mov:
-	cp ../target/game ~/git/run_area/
+	cp ../target/game ~/git/run/
 
 replay:
 	mv ~/git/run_area/server/replay.txt ~/git/ViewClientForReplay/
