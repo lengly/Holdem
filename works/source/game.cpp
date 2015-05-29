@@ -51,7 +51,8 @@ bool solve() {
 	string s;
 	int maxBet; // 当前单人下注最大金额
 	int totBet; // 总下注金额
-	int t_pid, t_jetton, t_money, t_now, my_now;
+	int t_pid, t_jetton, t_money, t_now;
+	int my_now_total, my_now_raise; // 我的当前已下注金额  我的当前应加注金额
 	int alive; // 活着人数
 	string t_action;
 	double p;
@@ -91,6 +92,8 @@ bool solve() {
 			
 			maxBet = 0;
 			alive = 0;
+			my_now_total = 0;
+			my_now_raise = 0;
 			while (s = que.front(), que.pop(), s != "/inquire") {
 				if (s == "total") {
 					s = que.front(); que.pop();
@@ -107,33 +110,40 @@ bool solve() {
 					s = que.front(); que.pop();
 					t_action = s;
 					if (t_action == "fold") alive++;
-					if (t_pid == my_id) my_now = t_now;
+					if (t_pid == my_id) my_now_total = t_now;
 					if (maxBet < t_now) maxBet = t_now;
 				}
 			}
 
-			my_now = maxBet - my_now;
+			my_now_raise = maxBet - my_now_total;
 			if (alive == 1) {
-				//如果所有人都弃牌  check
+				// 如果所有人都弃牌  check
 				sprintf(buf, "check");
-			} else if (my_now <= 20) {
+			} else if (my_now_raise == 0) {
+				// 当不需要加注的时候 (尤其是下了大盲注的时候) 跟
 				sprintf(buf, "call");
-				player.bet(my_now);
-			//} else if (count < 200) {
-			//	sprintf(buf, "fold");
+				player.bet(my_now_raise);
+			} else if (count < 200) {
+				// 头两百轮  不加注
+				sprintf(buf, "fold");
 			} else if (player.status() == HOLD) {
+				//底牌轮 概率大于0.75 并且加注不超过50 都跟
 				p = player.calcProbility();	
-				if (my_now < 100 && p > 0.7) {
+				if (my_now_total + my_now_raise <= 50 && p > 0.75) {
 					sprintf(buf, "call");
-					player.bet(my_now);
+					player.bet(my_now_raise);
 				} else {
 					sprintf(buf, "fold");
 				}
 			} else {
 				p = player.calcProbility();	
-				if (my_now < 500 && p > 0.9) {
+				if (my_now_raise <= 20 && p > 0.85) {
+					// 开公共牌后 只要概率大于0.85 且加注小于20 跟
+					sprintf(buf, "raise 10");
+					player.bet(my_now_raise);
+				} else if (p > 0.9) {
+					// 概率大于0.9后 不管什么情况都跟
 					sprintf(buf, "call");
-					player.bet(my_now);
 				} else {
 					sprintf(buf, "fold");
 				}

@@ -38,8 +38,8 @@ void test_calc() {
 		flag[c][p] = false;
 		hold.push_back(Card(c,p));
 	}
-	hold[0] = Card(1,13);
-	hold[1] = Card(3,2);
+	//hold[0] = Card(1,13);
+	//hold[1] = Card(3,2);
 	// for(int i = 0; i < 3; i++) {
 	// 	while( c=(rand()%4)+1, p=(rand()%13+2), !flag[c][p] );
 	// 	flag[c][p] = false;
@@ -60,17 +60,17 @@ void test_calc() {
 	// total.push_back(common[3]);
 
 	double ans = Card::calc(hold, common, total);
-	printf("%.6lf\n==========\n", ans);
+	printf("%.6lf\n", ans);
 }
 
 int main() {
-	// freopen("output","w",stdout);
+	freopen("output","w",stdout);
 	clock_t  clockBegin, clockEnd;    
     clockBegin = clock();    
 
     // for(int i=0;i<6000000;i++)  // 14s
     // 	test_7to5();
-    for(int i=0;i<1;i++)
+    for(int i=0;i<10000;i++)
 		test_calc();
  
 	clockEnd = clock();    
