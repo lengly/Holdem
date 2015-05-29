@@ -123,13 +123,13 @@ bool solve() {
 				// 当不需要加注的时候 (尤其是下了大盲注的时候) 跟
 				sprintf(buf, "call");
 				player.bet(my_now_raise);
-			} else if (count < 200) {
+			//} else if (count < 200) {
 				// 头两百轮  不加注
-				sprintf(buf, "fold");
+			//	sprintf(buf, "fold");
 			} else if (player.status() == HOLD) {
-				//底牌轮 概率大于0.75 并且加注不超过50 都跟
+				//底牌轮 概率大于0.75 并且加注不超过40 都跟
 				p = player.calcProbility();	
-				if (my_now_total + my_now_raise <= 50 && p > 0.75) {
+				if (my_now_total + my_now_raise <= 40 && p > 0.80) {
 					sprintf(buf, "call");
 					player.bet(my_now_raise);
 				} else {
@@ -137,12 +137,12 @@ bool solve() {
 				}
 			} else {
 				p = player.calcProbility();	
-				if (my_now_raise <= 20 && p > 0.85) {
-					// 开公共牌后 只要概率大于0.85 且加注小于20 跟
-					sprintf(buf, "raise 10");
+				if (my_now_raise <= 20 && my_now_raise+my_now_total<=100 && p > 0.90) {
+					// 
+					sprintf(buf, "call");
 					player.bet(my_now_raise);
-				} else if (p > 0.9) {
-					// 概率大于0.9后 不管什么情况都跟
+				} else if (my_now_raise <= 100 && p > 0.95) {
+					// 
 					sprintf(buf, "call");
 				} else {
 					sprintf(buf, "fold");
