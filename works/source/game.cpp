@@ -47,15 +47,26 @@ void receive() {
 	}
 }
 
+bool check_level(vector<Card> hold) {
+	// AA KK QQ JJ
+	if (hold[0].point == hold[1].point && hold[0].point > 10) return true;
+	// AK
+	if (hold[0].point + hold[1].point >= 27) return true;
+	return false;
+}
+
 bool solve() {
 	string s;
 	int maxBet; // 当前单人下注最大金额
 	int totBet; // 总下注金额
 	int t_pid, t_jetton, t_money, t_now;
+	int cnt_raise, cnt_call;
 	int my_now_total, my_now_raise; // 我的当前已下注金额  我的当前应加注金额
 	int alive; // 活着人数
-	string t_action;
+	vector<vector<string> > record;
+	string t_action, my_action;
 	double p;
+	bool flag;
 	while (qc > 0) {
 		qc--;
 		s = que.front();
@@ -66,6 +77,21 @@ bool solve() {
 			while (s != "/seat") {
 				s = que.front();
 				que.pop();
+				if (s == "/seat") break;
+				if (s == "button:") continue;
+				else if (s == "small" || s == "big") {
+					s = que.front();
+					que.pop();
+				} else {
+					t_pid = atoi(s.c_str());
+					s = que.front(); que.pop();
+					t_jetton = atoi(s.c_str());
+					s = que.front(); que.pop();
+					t_money = atoi(s.c_str());
+					if (t_pid == my_id) {
+						player.setMoney(t_money, t_jetton);
+					}
+				}
 			}
 		} else if (s == "game-over") {
 			return true;;
@@ -94,63 +120,102 @@ bool solve() {
 			alive = 0;
 			my_now_total = 0;
 			my_now_raise = 0;
+			record.clear();
+			vector<string> tmp;
+			my_action = "";
+			cnt_raise = 0;
 			while (s = que.front(), que.pop(), s != "/inquire") {
 				if (s == "total") {
 					s = que.front(); que.pop();
 					s = que.front(); que.pop();
 					totBet = atoi(s.c_str());
 				} else {
+					tmp.clear();
 					t_pid = atoi(s.c_str());
-					s = que.front(); que.pop();
+					s = que.front(); que.pop(); tmp.push_back(s);
 					t_jetton = atoi(s.c_str());
-					s = que.front(); que.pop();
+					s = que.front(); que.pop(); tmp.push_back(s);
 					t_money = atoi(s.c_str());
-					s = que.front(); que.pop();
+					s = que.front(); que.pop(); tmp.push_back(s);
 					t_now = atoi(s.c_str());
-					s = que.front(); que.pop();
+					s = que.front(); que.pop(); tmp.push_back(s);
 					t_action = s;
-					if (t_action == "fold") alive++;
-					if (t_pid == my_id) my_now_total = t_now;
+
+					record.push_back(tmp);
+
+					if (t_action != "fold") alive++;
+					if (t_action == "raise") cnt_raise++;
+					if (t_action == "call") cnt_call++;
+					if (t_pid == my_id) {
+						my_now_total = t_now;
+						my_action = t_action;
+						player.setMoney(t_money, t_jetton);
+					}
+					if (t_pid == my_id && t_action == "blind" && t_now == player.bigBind) player.isBigBind(true);
 					if (maxBet < t_now) maxBet = t_now;
 				}
 			}
 
-			my_now_raise = maxBet - my_now_total;
+			// my_now_raise = maxBet - my_now_total;
 			if (alive == 1) {
 				// 如果所有人都弃牌  check
 				sprintf(buf, "check");
-			} else if (my_now_raise == 0) {
-				// 当不需要加注的时候 (尤其是下了大盲注的时候) 跟
-				sprintf(buf, "call");
-				player.bet(my_now_raise);
-			//} else if (count < 200) {
-				// 头两百轮  不加注
-			//	sprintf(buf, "fold");
 			} else if (player.status() == HOLD) {
-				//底牌轮 概率大于0.75 并且加注不超过40 都跟
-				p = player.calcProbility();	
-				if (my_now_total + my_now_raise <= 40 && p > 0.80) {
-					sprintf(buf, "call");
-					player.bet(my_now_raise);
+				// 底牌轮
+				if (check_level(player.myCards)) {
+					//只打level2以上的牌
+ 
+					// 如果前面没有人raise, raise
+					if (cnt_raise == 0) {
+						my_now_raise = 200 + cnt_call * 40;
+						sprintf(buf, "raise %d", my_now_raise);
+					} else if (cnt_raise > 1) {
+						sprintf(buf, "all_in");
+					} else if (cnt_raise == 1 && my_action == "raise") {
+						// 如果只有我raise
+						sprintf(buf, "check");
+					} else {
+						//如果有人在你前面call这个raise all in 
+						//如果这个raise超过你的1/3筹码,all in
+						flag = false;
+						int tt = record.size() - 1;
+						for(int i = min(tt,6); i >= 0; i--) {
+							if (record[i][3] == "raise") {
+								for(int j = i - 1; j >= 0; j--) {
+									if (record[j][3] == "call") {
+										flag = true; break;
+									}
+								}
+							}
+						}
+						if (flag || (maxBet - my_now_total) > player.jetton / 3) {
+							sprintf(buf, "all_in");
+						} else {
+							my_now_raise = 200;
+							sprintf(buf, "raise %d", my_now_raise);
+						}
+					}
+				} else if (player.isBigBind()){
+					sprintf(buf, "check");
 				} else {
 					sprintf(buf, "fold");
+				}
+			} else if (player.status() == FLOP) {
+				double p = player.calcProbility();
+				if (p > 0.85) {
+					//sprintf(buf, "call");
+					if (cnt_raise > 0) sprintf(buf, "raise 200");
+					else if (cnt_raise == 0) sprintf(buf, "raise %d", 200);
+				} else {
+					if (cnt_raise == 0) sprintf(buf, "check");
+					else sprintf(buf, "fold");
 				}
 			} else {
-				p = player.calcProbility();	
-				if (my_now_raise <= 20 && my_now_raise+my_now_total<=100 && p > 0.90) {
-					// 
-					sprintf(buf, "call");
-					player.bet(my_now_raise);
-				} else if (my_now_raise <= 100 && p > 0.95) {
-					// 
-					sprintf(buf, "call");
-				} else {
-					sprintf(buf, "fold");
-				}
+				if (cnt_raise > 0 && my_now_total == 40) sprintf(buf, "fold");
+				else sprintf(buf, "call");
 			}
-			// if (player.status() > 0) {
-			// 	p = player.calcProbility();	
-			// }
+
+
 
 			// sprintf(buf, "all_in");
 			len = strlen(buf);

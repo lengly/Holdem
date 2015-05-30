@@ -15,6 +15,7 @@ void Player::clear() {
 	circle = now = 0;
 	money = jetton = 0;
 	maxInitialMoney = 0;
+	_isBigBind = false;
 }
 
 void Player::addCard(Card card) {
@@ -36,6 +37,7 @@ void Player::setHoldCards(Card card1, Card card2) {
 
 void Player::startRound() {
 	now = circle = 0;
+	_isBigBind = false;
 	cards.clear();
 	common.clear();
 	myCards.clear();
@@ -57,6 +59,15 @@ void Player::win(int _win) {
 	jetton += _win;
 }
 
+void Player::setMoney(int _money, int _jetton) {
+	money = _money;
+	jetton = _jetton;
+}
+
+double Player::calcProbility() {
+	return Card::calc(myCards, common, cards);
+}
+
 int Player::status() {
 	return _status;
 }
@@ -65,11 +76,10 @@ void Player::status(int s) {
 	_status = s;
 }
 
-void Player::setMoney(int _money, int _jetton) {
-	money = _money;
-	jetton = _jetton;
+bool Player::isBigBind() {
+	return _isBigBind;
 }
 
-double Player::calcProbility() {
-	return Card::calc(myCards, common, cards);
+void Player::isBigBind(bool b) {
+	_isBigBind = b;
 }
