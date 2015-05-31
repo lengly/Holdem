@@ -46,11 +46,11 @@ void test_calc() {
 	// 	common.push_back(Card(c,p));
 	// }
 
-	hold.push_back(Card(1,11));
-	hold.push_back(Card(1,11));
-	common.push_back(Card(1,11));
-	common.push_back(Card(3,2));
-	common.push_back(Card(4,3));
+	hold.push_back(Card(1,13));
+	hold.push_back(Card(2,4));
+	common.push_back(Card(1,8));
+	common.push_back(Card(1,12));
+	common.push_back(Card(3,4));
 	// common.push_back(Card(4,8));
 
 	total.push_back(hold[0]);

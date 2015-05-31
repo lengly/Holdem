@@ -195,7 +195,7 @@ bool solve() {
 							sprintf(buf, "raise %d", my_now_raise);
 						}
 					}
-				} else if (player.isBigBind()){
+				} else if (player.isBigBind() && maxBet == 40){
 					sprintf(buf, "check");
 				} else {
 					sprintf(buf, "fold");
