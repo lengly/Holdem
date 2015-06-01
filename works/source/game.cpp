@@ -170,30 +170,13 @@ bool solve() {
 						my_now_raise = 200 + cnt_call * 40;
 						sprintf(buf, "raise %d", my_now_raise);
 					} else if (cnt_raise > 1) {
-						sprintf(buf, "all_in");
+						sprintf(buf, "raise 200");
 					} else if (cnt_raise == 1 && my_action == "raise") {
 						// 如果只有我raise
 						sprintf(buf, "check");
 					} else {
-						//如果有人在你前面call这个raise all in 
-						//如果这个raise超过你的1/3筹码,all in
-						flag = false;
-						int tt = record.size() - 1;
-						for(int i = min(tt,6); i >= 0; i--) {
-							if (record[i][3] == "raise") {
-								for(int j = i - 1; j >= 0; j--) {
-									if (record[j][3] == "call") {
-										flag = true; break;
-									}
-								}
-							}
-						}
-						if (flag || (maxBet - my_now_total) > player.jetton / 3) {
-							sprintf(buf, "all_in");
-						} else {
-							my_now_raise = 200;
-							sprintf(buf, "raise %d", my_now_raise);
-						}
+						if (maxBet < 200) sprintf(buf, "raise 200");
+						else sprintf(buf, "call");
 					}
 				} else if (player.isBigBind() && maxBet == 40){
 					sprintf(buf, "check");
@@ -203,9 +186,8 @@ bool solve() {
 			} else if (player.status() == FLOP) {
 				double p = player.calcProbility();
 				if (p > 0.85) {
-					//sprintf(buf, "call");
-					if (cnt_raise > 0) sprintf(buf, "raise 200");
-					else if (cnt_raise == 0) sprintf(buf, "raise %d", 200);
+					if (cnt_raise > 0 && my_now_total >= 500) sprintf(buf, "call");
+					else sprintf(buf, "raise 200");
 				} else {
 					if (maxBet == my_now_total) sprintf(buf, "check");
 					else sprintf(buf, "fold");
